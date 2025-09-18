@@ -1,0 +1,74 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto:wght@400;500&family=Poppins:wght@500&family=Hind+Siliguri:wght@400;500;700&family=SolaimanLipi&display=swap');
+
+/* Tailwind & DaisyUI */
+@import "tailwindcss";
+
+/* Porinity Theme */
+@theme {
+    /* Default / fallback fonts */
+    --font-heading: 'Montserrat', sans-serif;
+    --font-sans: 'Roboto', sans-serif;
+    --font-cta: 'Poppins', sans-serif;
+
+    /* Colors */
+    --color-primary: #522B79;        /* Navbar, headings, primary buttons */
+    --color-primary-accent: #ED3284; /* Secondary buttons, hover effects */
+    --color-light-purple: #7C4DB3;   /* Card borders, badges, hover states */
+    --color-light-pink: #FF6EB4;     /* Icons, highlights */
+    --color-dark-gray: #333333;      /* Body text */
+    --color-medium-gray: #777777;    /* Subtext, placeholders */
+    --color-bg-light: #F7F5FA;       /* Page background */
+    --color-card-light: #FFFFFF;     /* Cards, modals */
+    --color-success: #4CAF50;        /* Success messages */
+    --color-error: #F44336;          /* Error messages */
+    --color-warning: #FFC107;        /* Warnings */
+    --color-info: #2196F3;           /* Info messages */
+}
+
+/* -------------------------- */
+/* Language-Specific Fonts     */
+/* -------------------------- */
+
+/* English Fonts */
+.font-en {
+    --font-heading: 'Montserrat', sans-serif;
+    --font-sans: 'Roboto', sans-serif;
+    --font-cta: 'Poppins', sans-serif;
+}
+
+/* Bengali Fonts */
+.font-bn {
+    --font-heading: 'SolaimanLipi', sans-serif;
+    --font-sans: 'Hind Siliguri', sans-serif;
+    --font-cta: 'Poppins', sans-serif;
+}
+
+/* -------------------------- */
+/* Apply Fonts Globally        */
+/* -------------------------- */
+
+body {
+    font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+}
+
+button, .btn {
+    font-family: var(--font-cta);
+}
+
+/* Optional semantic Tailwind classes */
+.heading {
+    font-family: var(--font-heading);
+}
+
+.body {
+    font-family: var(--font-sans);
+}
+
+.cta {
+    font-family: var(--font-cta);
+}
