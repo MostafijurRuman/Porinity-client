@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { createUserWithEmailAndPassword, getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
 import app from '../Firebase/firebase.config';
 import AuthContext from '../Contexts/AuthContext';
+import axiosNormal from '../Hooks/axiosNormal';
 
 
 const auth = getAuth(app);
@@ -15,9 +16,31 @@ const AuthProvider = ({ children }) => {
   const provider = new GoogleAuthProvider();
   // Monitor authentication state changes (login/logout)
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (loggedUser) => {
-      setUser(loggedUser);    // Update user state
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);    // Update user state
       setInitializing(false); // Initial auth state resolved
+
+      // Create JWT Token in client
+      if(currentUser && currentUser.email){
+        const  user = {email: currentUser.email}
+        axiosNormal.post('/jwt', user ,{withCredentials:true})
+        .then(res =>{
+          console.log('Login Token ',res.data)
+        })
+        .catch(error => {
+          console.error('Error creating JWT:', error);
+        });
+      }
+      // clear jwt token from cookie
+      else {
+        axiosNormal.post('/logout', {}, {
+          withCredentials: true
+        })
+        .then(res => console.log('Logout',res.data))
+        .catch(error => {
+          console.error('Error during logout:', error);
+        });
+      }
     });
 
     // Cleanup listener on component unmount
