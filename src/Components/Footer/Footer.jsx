@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 export default function Footer() {
   const year = new Date().getFullYear()
   return (
-    <footer className="mt-16 bg-[var(--color-bg-light)] text-[var(--color-dark-gray)] border-t border-[var(--color-bg-light)]/70">
+    <footer className=" bg-[var(--color-bg-light)] text-[var(--color-dark-gray)] border-t border-[var(--color-bg-light)]/70">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Top: brand + about */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">

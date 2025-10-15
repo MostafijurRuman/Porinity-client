@@ -5,9 +5,10 @@ import { FiUser, FiMail, FiLock, FiImage, FiUserPlus, FiEye, FiEyeOff } from 're
 import { FcGoogle } from 'react-icons/fc'
 import useAuth from '../../Hooks/UseAuth'
 import { toast } from 'react-toastify'
+import axiosNormal from '../../Hooks/axiosNormal'
 
 export default function Register() {
-  const { registerWithEmailPassword, updateUserProfile, handelLoginWithGoogle } = useAuth() || {}
+  const { registerWithEmailPassword, updateUserProfile, handelLoginWithGoogle,setLoading } = useAuth() || {}
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from?.pathname || '/'
@@ -30,28 +31,63 @@ export default function Register() {
         return err?.message || 'Registration failed. Please try again.'
     }
   }
+   // --- Send Firebase user to backend ---
+  const sendUserToBackend = async (firebaseUser) => {
+    if (!firebaseUser?.uid || !firebaseUser?.email) {
+      return;
+    }
+
+    const userPayload = {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      role: 'user',
+      userType: 'basic',
+    };
+
+    try {
+      const res = await axiosNormal.post('/register', userPayload, { withCredentials: true });
+      console.log('Backend response:', res.data);
+    } catch (dbError) {
+      const status = dbError?.response?.status;
+      if (status === 400 || status === 409) {
+        console.warn('User already exists in backend:', firebaseUser.email);
+        return;
+      }
+      throw dbError;
+    }
+  };
 
   const onSubmit = async (data) => {
     setAuthError('')
+    setLoading?.(true)
     try {
-      await registerWithEmailPassword(data.email, data.password)
-      await updateUserProfile({ displayName: data.name, photoURL: data.photoURL })
+     const firebaseUser= await registerWithEmailPassword(data.email, data.password)
+     await updateUserProfile({ displayName: data.name, photoURL: data.photoURL })
+      await sendUserToBackend(firebaseUser.user)
       toast.success('Account created successfully')
       reset()
       navigate(from, { replace: true })
+  window.location.reload()
     } catch (err) {
       setAuthError(mapFirebaseError(err))
+    } finally {
+      setLoading?.(false)
     }
   }
 
   const onGoogle = async () => {
     setAuthError('')
+    setLoading?.(true)
     try {
-      await handelLoginWithGoogle()
+      const credential = await handelLoginWithGoogle()
+      await sendUserToBackend(credential?.user)
       toast.success('Signed up with Google')
       navigate(from, { replace: true })
+  window.location.reload()
     } catch (err) {
       setAuthError(mapFirebaseError(err))
+    } finally {
+      setLoading?.(false)
     }
   }
 

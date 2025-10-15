@@ -7,6 +7,7 @@ import HomeLayout from "../Layouts/HomeLayout";
 import Home from "../Pages/Home/Home"
 
 import Biodatas from "../Pages/Biodatas/Biodatas";
+import BiodataDetails from "../Pages/Biodatas/BiodataDetails";
 import AboutUs from "../Pages/AboutUs/AboutUs";
 import Contact from "../Pages/Contact/Contact";
 import Login from "../Pages/Login/Login";
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
             {
                 path: "biodatas",
                 element: <Biodatas/>,
+            },
+            {
+                path: "biodatas/:id",
+                element: <PrivateRoutes><BiodataDetails/></PrivateRoutes>,
             },
             {
                 path: "about-us",

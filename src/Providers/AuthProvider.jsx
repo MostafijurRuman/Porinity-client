@@ -21,7 +21,7 @@ const AuthProvider = ({ children }) => {
       setInitializing(false); // Initial auth state resolved
 
       // Create JWT Token in client
-      if(currentUser && currentUser.email){
+      if(currentUser && currentUser.email && !loading)  {
         const  user = {email: currentUser.email}
         axiosNormal.post('/jwt', user ,{withCredentials:true})
         .then(res =>{
@@ -83,7 +83,7 @@ const AuthProvider = ({ children }) => {
   
 
   // Shared authentication context value
-  const authInfo = { user,setUser, loading, logout, registerWithEmailPassword, updateUserProfile,loginWithEmailPassword,handelLoginWithGoogle };
+  const authInfo = { user,setUser, loading,setLoading, logout, registerWithEmailPassword, updateUserProfile,loginWithEmailPassword,handelLoginWithGoogle };
   
   // Show loading spinner while loading
   if (initializing) {
@@ -99,5 +99,4 @@ const AuthProvider = ({ children }) => {
 };
 
 export default AuthProvider;
-
 
