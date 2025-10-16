@@ -97,7 +97,7 @@ export default function BiodataDetails() {
     mutationFn: async () => {
       await axiosNormal.post(
         '/favorites',
-        { biodataId: biodata?.biodataId },
+        { biodataId: biodata?.biodataId, uid:user?.uid },
         { withCredentials: true }
       );
     },
