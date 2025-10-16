@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   FiArrowLeft,
   FiMapPin,
@@ -16,6 +16,7 @@ import { toast } from 'react-toastify';
 import axiosNormal from '../../Hooks/axiosNormal';
 import useAuth from '../../Hooks/UseAuth';
 import BiodataCard from '../../Components/Biodata/BiodataCard';
+import useFavorites from '../../Hooks/useFavorites';
 
 // TODO: Replace placeholder fallback with API response once detail endpoint stabilizes
 const placeholderDetails = (id) => ({
@@ -52,6 +53,7 @@ const placeholderCollection = Array.from({ length: 6 }).map((_, idx) => ({
 export default function BiodataDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const isPremiumMember = Boolean(
@@ -93,23 +95,65 @@ export default function BiodataDetails() {
       .slice(0, 3);
   }, [similarList, biodata]);
 
-  const { mutate: handleAddFavourite, isLoading: isSavingFavourite } = useMutation({
-    mutationFn: async () => {
-      await axiosNormal.post(
-        '/favorites',
-        { biodataId: biodata?.biodataId, uid:user?.uid },
-        { withCredentials: true }
-      );
-    },
-    onSuccess: () => {
-      toast.success('Added to favourites');
-    },
-    onError: () => {
-      toast.error('Unable to add favourites right now. Please try again.');
-    },
-  });
+  const {
+    favourites,
+    addFavorite,
+    isAddingFavorite,
+    removeFavorite,
+    isRemovingFavorite,
+  } = useFavorites();
+
+  const isAlreadyFavourite = useMemo(() => {
+    if (!biodata?.biodataId) return false;
+    return favourites.some((fav) => fav?.biodataId === biodata.biodataId);
+  }, [favourites, biodata?.biodataId]);
 
   const contactVisible = Boolean(isPremiumMember);
+
+  const handleAddFavourite = async () => {
+    if (!biodata?.biodataId) return;
+
+    if (!user?.uid) {
+      toast.info('Please log in to save favourites.');
+      navigate('/login', { state: location });
+      return;
+    }
+
+    if (isAlreadyFavourite) {
+      toast.info('This biodata is already in your favourites.');
+      return;
+    }
+
+    try {
+      const response = await addFavorite(biodata.biodataId);
+      const message = response?.message || 'Biodata added to favourites';
+      if (message.toLowerCase().includes('already')) {
+        toast.info(message);
+      } else {
+        toast.success(message);
+      }
+    } catch (err) {
+      const apiMessage = err?.response?.data?.message;
+      toast.error(apiMessage || 'Unable to update favourites right now. Please try again.');
+    }
+  };
+
+  const handleRemoveFavourite = async () => {
+    if (!biodata?.biodataId) return;
+
+    try {
+      const response = await removeFavorite(biodata.biodataId);
+      const message = response?.message || 'Biodata removed from favourites';
+      if (message.toLowerCase().includes('not')) {
+        toast.info(message);
+      } else {
+        toast.success(message);
+      }
+    } catch (err) {
+      const apiMessage = err?.response?.data?.message;
+      toast.error(apiMessage || 'Unable to update favourites right now. Please try again.');
+    }
+  };
 
   const handleRequestContact = () => {
     if (!biodata?.biodataId) return;
@@ -182,12 +226,16 @@ export default function BiodataDetails() {
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  disabled={isSavingFavourite}
-                  onClick={() => handleAddFavourite()}
+                  disabled={isAddingFavorite || isRemovingFavorite}
+                  onClick={isAlreadyFavourite ? handleRemoveFavourite : handleAddFavourite}
                   className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-primary-accent)] to-[var(--color-light-pink)] px-5 py-2 text-sm font-semibold text-white shadow transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-primary-accent)] disabled:cursor-not-allowed disabled:opacity-80"
                 >
                   <FiHeart className="text-base" />
-                  {isSavingFavourite ? 'Saving…' : 'Add to Favourites'}
+                  {isAddingFavorite || isRemovingFavorite
+                    ? 'Saving…'
+                    : isAlreadyFavourite
+                    ? 'Remove from Favourites'
+                    : 'Add to Favourites'}
                 </button>
 
                 {!contactVisible && (
