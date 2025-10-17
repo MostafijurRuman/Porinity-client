@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FiUsers, FiSearch } from 'react-icons/fi';
 import BiodataFilters from '../../Components/Biodata/BiodataFilters';
@@ -10,12 +10,12 @@ import axiosNormal from '../../Hooks/axiosNormal';
 const divisions = ['Dhaka', 'Chattagra', 'Rangpur', 'Barisal', 'Khulna', 'Mymensingh', 'Sylhet'];
 
 // TODO: Replace placeholder generation once the biodata listing API is finalized.
-const placeholderBiodata = Array.from({ length: 20 }).map((_, index) => {
+const placeholderBiodata = Array.from({ length: 45 }).map((_, index) => {
   const id = 1600 + index;
   const gender = index % 2 === 0 ? 'Male' : 'Female';
   const division = divisions[index % divisions.length];
   return {
-    biodataId: id,
+    biodataId: `PRNT-${id}`,
     biodataType: gender,
     permanentDivision: division,
     age: 22 + (index % 10),
@@ -33,53 +33,92 @@ const defaultFilters = {
   searchId: '',
 };
 
+const PAGE_SIZE = 15;
+
 export default function Biodatas() {
   const [filters, setFilters] = useState(defaultFilters);
+  const [page, setPage] = useState(1);
 
-  const { data: biodata = [], isLoading, isError, error } = useQuery({
-    queryKey: ['biodataAll'],
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    isFetching,
+  } = useQuery({
+    queryKey: ['biodataAll', filters, page],
     queryFn: async () => {
-      const res = await axiosNormal.get('/biodata');
-      return Array.isArray(res.data) ? res.data : [];
+      const params = {
+        page,
+        limit: PAGE_SIZE,
+        minAge: filters.minAge,
+        maxAge: filters.maxAge,
+      };
+
+      if (filters.type && filters.type !== 'all') {
+        params.type = filters.type;
+      }
+
+      if (filters.division && filters.division !== 'all') {
+        params.division = filters.division;
+      }
+
+      if (filters.searchId) {
+        params.searchId = filters.searchId.trim();
+      }
+
+      const res = await axiosNormal.get('/biodata', { params });
+      return res.data;
     },
-    staleTime: 5 * 60 * 1000,
+    keepPreviousData: true,
+    staleTime: 60 * 1000,
   });
 
-  const sourceList = useMemo(() => {
-    const list = Array.isArray(biodata) && biodata.length ? biodata : placeholderBiodata;
-    return list.slice(0, 20);
-  }, [biodata]);
+  const pagination = data?.pagination;
+  const serverList = data?.data ?? [];
 
-  const filtered = useMemo(() => {
-    return sourceList.filter((item) => {
-      const ageValue = parseInt(item?.age, 10);
-      const matchesAge = Number.isNaN(ageValue)
-        ? true
-        : ageValue >= filters.minAge && ageValue <= filters.maxAge;
+  const fallbackTotal = placeholderBiodata.length;
+  const fallbackTotalPages = Math.max(1, Math.ceil(fallbackTotal / PAGE_SIZE));
+  const safeFallbackPage = Math.min(page, fallbackTotalPages);
+  const fallbackList = useMemo(() => {
+    const start = (safeFallbackPage - 1) * PAGE_SIZE;
+    return placeholderBiodata.slice(start, start + PAGE_SIZE);
+  }, [safeFallbackPage]);
 
-      const typeValue = (item?.biodataType || '').toLowerCase();
-      const matchesType =
-        filters.type === 'all' || typeValue === filters.type.toLowerCase();
+  const currentPage = isError ? safeFallbackPage : pagination?.page ?? page;
+  const totalPages = isError ? fallbackTotalPages : pagination?.totalPages ?? 1;
+  const totalCount = isError ? fallbackTotal : pagination?.total ?? 0;
+  const limit = isError ? PAGE_SIZE : pagination?.limit ?? PAGE_SIZE;
 
-      const divisionValue = item?.permanentDivision || '';
-      const matchesDivision =
-        filters.division === 'all' || divisionValue === filters.division;
+  useEffect(() => {
+    if (page !== currentPage) {
+      setPage(currentPage);
+    }
+  }, [currentPage, page]);
 
-      const idString = String(item?.biodataId || '').toLowerCase();
-      const matchesSearch = filters.searchId
-        ? idString.includes(filters.searchId.toLowerCase())
-        : true;
+  const listing = isError ? fallbackList : serverList;
+  const showSkeleton = isLoading;
+  const isEmpty = !showSkeleton && !isFetching && listing.length === 0 && !isError;
 
-      return matchesAge && matchesType && matchesDivision && matchesSearch;
-    });
-  }, [sourceList, filters]);
+  const showingFrom = totalCount === 0 ? 0 : (currentPage - 1) * limit + 1;
+  const showingTo = totalCount === 0 ? 0 : Math.min(showingFrom + listing.length - 1, totalCount);
+
+  const hasPrev = currentPage > 1;
+  const hasNext = currentPage < totalPages;
 
   const handleFiltersChange = (next) => {
     setFilters(next);
+    setPage(1);
   };
 
   const handleReset = () => {
     setFilters(defaultFilters);
+    setPage(1);
+  };
+
+  const handlePageChange = (nextPage) => {
+    if (nextPage < 1 || nextPage > totalPages || nextPage === page) return;
+    setPage(nextPage);
   };
 
   return (
@@ -87,6 +126,7 @@ export default function Biodatas() {
       <div className="absolute inset-x-0 top-0 -z-10 h-40 bg-[radial-gradient(circle_at_top,rgba(82,43,121,0.12),transparent_60%)]" />
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:flex-row lg:gap-12 lg:px-8">
         <div className="lg:w-80 xl:w-96">
+          {/* <div>Total biodata : {biodata.length}</div> */}
           <BiodataFilters filters={filters} onChange={handleFiltersChange} onReset={handleReset} />
         </div>
 
@@ -113,13 +153,18 @@ export default function Biodatas() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-[var(--color-medium-gray)] uppercase tracking-wide">
-              <span>Showing {filtered.length} of {sourceList.length} biodatas</span>
+              <span>
+                Showing {totalCount === 0 ? 0 : `${showingFrom}-${showingTo}`} of {totalCount} biodatas
+              </span>
               <span>Filters: Type <strong className="text-[var(--color-primary)]">{filters.type}</strong>, Age {filters.minAge}-{filters.maxAge}, Division <strong className="text-[var(--color-primary)]">{filters.division}</strong></span>
             </div>
             {isError && (
               <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
                 Unable to load biodatas from server. Using showcase list for now. ({error?.message || 'Network error'})
               </p>
+            )}
+            {isFetching && !isLoading && (
+              <p className="text-xs text-[var(--color-medium-gray)]">Updating list…</p>
             )}
           </header>
 
@@ -128,15 +173,39 @@ export default function Biodatas() {
               <BiodataGridSkeleton count={6} />
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {filtered.length === 0 ? (
+                {isEmpty ? (
                   <p className="col-span-full text-center text-sm font-medium text-[var(--color-medium-gray)]">
                     No biodata matches the selected filters yet. Try adjusting the criteria.
                   </p>
                 ) : (
-                  filtered.map((item) => (
+                  listing.map((item) => (
                     <BiodataCard key={item.biodataId} biodata={item} />
                   ))
                 )}
+              </div>
+            )}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={!hasPrev || isFetching}
+                  className="rounded-full border border-[var(--color-light-purple)]/40 px-4 py-2 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-accent)] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Previous
+                </button>
+                <span className="text-sm font-medium text-[var(--color-dark-gray)]">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!hasNext || isFetching}
+                  className="rounded-full border border-[var(--color-light-purple)]/40 px-4 py-2 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-accent)] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Next
+                </button>
               </div>
             )}
 

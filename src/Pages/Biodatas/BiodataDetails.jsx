@@ -115,7 +115,7 @@ export default function BiodataDetails() {
 
     if (!user?.uid) {
       toast.info('Please log in to save favourites.');
-      navigate('/login', { state: location });
+      navigate('/login', { state: location?.pathname || '/biodatas' });
       return;
     }
 

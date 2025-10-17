@@ -1,6 +1,9 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useCallback, useMemo } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiEye, FiHeart, FiShare2 } from 'react-icons/fi';
+import { toast } from 'react-toastify';
+import useFavorites from '../../Hooks/useFavorites';
+import useAuth from '../../Hooks/UseAuth';
 
 // Card component for biodata listings with premium look and feel
 export default function BiodataCard({ biodata }) {
@@ -11,10 +14,100 @@ export default function BiodataCard({ biodata }) {
     permanentDivision,
     age,
     occupation,
-    views = 0,
+    views,
   } = biodata;
 
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth() || {};
+  const {
+    favouritesIds,
+    addFavorite,
+    isAddingFavorite,
+    removeFavorite,
+    isRemovingFavorite,
+  } = useFavorites();
+
+  const viewCount = Number.isFinite(Number(views)) ? Number(views) : 0;
+  const showViews = viewCount > 0;
+
   const typeLabel = biodataType ? biodataType.charAt(0).toUpperCase() + biodataType.slice(1).toLowerCase() : 'Unknown';
+  const isFavourite = useMemo(
+    () => Array.isArray(favouritesIds) && favouritesIds.includes(biodataId),
+    [favouritesIds, biodataId],
+  );
+  const isMutatingFavourite = isAddingFavorite || isRemovingFavorite;
+
+  const shareUrl = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    return `${window.location.origin}/biodatas/${biodataId}`;
+  }, [biodataId]);
+
+  const handleShare = useCallback(async () => {
+    if (!shareUrl) {
+      toast.error('Share link is unavailable right now.');
+      return;
+    }
+
+    try {
+      const shareData = {
+        title: `Biodata ${biodataId}`,
+        text: 'Check out this biodata profile on Porinity.',
+        url: shareUrl,
+      };
+
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast.success('Profile shared successfully');
+        return;
+      }
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.info('Link copied to clipboard');
+        return;
+      }
+
+      throw new Error('Share API not supported');
+    } catch (err) {
+      console.error('Share failed', err);
+      toast.error('Unable to share this biodata right now.');
+    }
+  }, [biodataId, shareUrl]);
+
+  const handleToggleFavourite = useCallback(async () => {
+    if (!user?.uid) {
+      toast.info('Please log in to manage favourites.');
+      navigate('/login', { state: location?.pathname || '/biodatas' });
+      return;
+    }
+
+    if (isMutatingFavourite) return;
+
+    try {
+      if (isFavourite) {
+        const response = await removeFavorite(biodataId);
+        const message = response?.message || 'Biodata removed from favourites';
+        toast.success(message);
+      } else {
+        const response = await addFavorite(biodataId);
+        const message = response?.message || 'Biodata added to favourites';
+        toast.success(message);
+      }
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Unable to update favourites right now.';
+      toast.error(message);
+    }
+  }, [
+    addFavorite,
+    biodataId,
+    isFavourite,
+    isMutatingFavourite,
+    navigate,
+    removeFavorite,
+    user?.uid,
+    location?.pathname,
+  ]);
 
   return (
     <article
@@ -28,10 +121,17 @@ export default function BiodataCard({ biodata }) {
           </div>
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-light-purple)]/40 text-[var(--color-primary-accent)] transition hover:bg-[var(--color-primary-accent)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)]/60"
-            aria-label="Save biodata to favourites"
+            onClick={handleToggleFavourite}
+            disabled={isMutatingFavourite}
+            aria-pressed={isFavourite}
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)]/60 disabled:cursor-not-allowed disabled:opacity-70 ${
+              isFavourite
+                ? 'border-[var(--color-primary-accent)] bg-[var(--color-primary-accent)] text-white shadow'
+                : 'border-[var(--color-light-purple)]/40 text-[var(--color-primary-accent)] hover:bg-[var(--color-primary-accent)] hover:text-white'
+            }`}
+            aria-label={isFavourite ? 'Remove biodata from favourites' : 'Save biodata to favourites'}
           >
-            <FiHeart className="text-base" />
+            <FiHeart className="text-base" style={{ fill: isFavourite ? 'currentColor' : 'none' }} />
           </button>
         </header>
 
@@ -64,13 +164,18 @@ export default function BiodataCard({ biodata }) {
       </div>
 
       <footer className="flex items-center justify-between border-t border-[var(--color-light-purple)]/30 bg-[var(--color-bg-light)]/60 px-5 py-3 text-sm text-[var(--color-medium-gray)] dark:border-gray-700 dark:bg-gray-900/60">
-        <div className="flex items-center gap-2">
-          <FiEye className="text-base" />
-          <span>{views} views</span>
+        <div className="flex min-h-[1.5rem] items-center gap-2">
+          {showViews && (
+            <>
+              <FiEye className="text-base" />
+              <span>{viewCount} views</span>
+            </>
+          )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-1 items-center justify-between gap-4">
           <button
             type="button"
+            onClick={handleShare}
             className="inline-flex items-center gap-1 rounded-full border border-transparent px-3 py-1 text-xs font-medium text-[var(--color-primary)] transition hover:bg-white hover:text-[var(--color-primary)] focus:outline-none"
           >
             <FiShare2 className="text-sm" /> Share
