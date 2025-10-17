@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, useAnimation } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -15,24 +15,20 @@ import axiosNormal from '../../Hooks/axiosNormal';
 const MARRIAGES_PLACEHOLDER = 7; // TODO: replace with real API value
 
 export default function SuccessCounters() {
-  const { data: biodata = [], isLoading, isError, error } = useQuery({
-    queryKey: ['biodataAllForStats'],
+  const { data: statsResponse, isLoading, isError, error } = useQuery({
+    queryKey: ['biodata', 'stats'],
     queryFn: async () => {
-      const res = await axiosNormal.get('/biodata');
-      return Array.isArray(res.data) ? res.data : [];
+      const { data } = await axiosNormal.get('/stats/biodata');
+      return data || {};
     },
     staleTime: 60_000,
   });
 
-  const stats = useMemo(() => {
-    let male = 0, female = 0;
-    for (const b of biodata) {
-      const t = (b?.biodataType || '').toLowerCase();
-      if (t === 'male') male++;
-      else if (t === 'female') female++;
-    }
-    return { total: biodata.length, male, female };
-  }, [biodata]);
+  const stats = {
+    total: Number(statsResponse?.total) || 0,
+    female: Number(statsResponse?.female) || 0,
+    male: Number(statsResponse?.male) || 0,
+  };
 
   return (
     <section className="relative w-full py-16 lg:py-20">

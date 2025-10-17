@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { AnimatePresence, motion as m } from 'framer-motion'
+import { AnimatePresence, motion as Motion } from 'framer-motion'
 import { FiMenu, FiX, FiUser, FiLogOut, FiHome, FiGrid, FiEdit3, FiUsers, FiInfo, FiPhone } from 'react-icons/fi'
 import { TfiCrown } from 'react-icons/tfi'
 import useAuth from '../../Hooks/UseAuth'
@@ -104,13 +104,13 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center">
             {user ? (
               <div className="relative">
-                <m.button
+                <Motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setIsProfileDropdownOpen((v) => !v)}
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--color-bg-light)] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)] focus:ring-offset-2"
                 >
-                  <m.div
+                  <Motion.div
                     whileHover={{ scale: 1.05 }}
                     className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[var(--color-bg-light)]"
                   >
@@ -119,17 +119,17 @@ export default function Navbar() {
                     ) : (
                       <FiUser className="h-5 w-5 text-[var(--color-primary)]" />
                     )}
-                  </m.div>
+                  </Motion.div>
                   <span className="text-sm font-medium text-[var(--color-dark-gray)] max-w-32 truncate flex items-center gap-1">
                     <span className="truncate">{Name || 'User'}</span>
                     {isPremiumUser && (
                       <TfiCrown className="text-[var(--color-primary)] text-xs" />
                     )}
                   </span>
-                  </m.button>
+                  </Motion.button>
                 <AnimatePresence>
                   {isProfileDropdownOpen && (
-                      <m.div
+                      <Motion.div
                       initial={{ opacity: 0, y: -10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -150,7 +150,7 @@ export default function Navbar() {
                         <span>Edit Profile</span>
                       </Link>
                       <hr className="my-1" />
-                        <m.button
+                        <Motion.button
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         whileHover={{ scale: 1.02 }}
@@ -160,41 +160,41 @@ export default function Navbar() {
                       >
                         <FiLogOut className="w-4 h-4" />
                         <span>Logout</span>
-                        </m.button>
-                      </m.div>
+                        </Motion.button>
+                      </Motion.div>
                   )}
                 </AnimatePresence>
               </div>
             ) : (
-                <m.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Link to="/login" className={primaryBtnClass}>Login</Link>
-                </m.div>
+                </Motion.div>
             )}
           </div>
 
           {/* Mobile: hamburger */}
-            <m.button
+            <Motion.button
             aria-label="Open menu"
             className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-[var(--color-primary)] hover:bg-[var(--color-bg-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)]"
             onClick={() => setIsOpen(true)}
             whileTap={{ scale: 0.95 }}
           >
             <FiMenu className="w-6 h-6" />
-            </m.button>
+            </Motion.button>
         </div>
       </nav>
 
       {/* Offcanvas with Framer Motion */}
       <AnimatePresence>
         {isOpen && (
-            <m.div
+            <Motion.div
             className="fixed inset-0 z-40 md:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             {/* Backdrop */}
-              <m.div
+              <Motion.div
               className="absolute inset-0 backdrop-blur-md bg-gradient-to-r from-[var(--color-primary)]/40 via-[var(--color-primary)]/20 to-transparent"
               onClick={() => setIsOpen(false)}
               initial={{ opacity: 0 }}
@@ -204,7 +204,7 @@ export default function Navbar() {
             />
 
             {/* Panel */}
-              <m.aside
+              <Motion.aside
               role="dialog"
               aria-modal="true"
               className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-[var(--color-card-light)] shadow-xl"
@@ -217,14 +217,14 @@ export default function Navbar() {
                 <Link to="/" className="flex items-center gap-2">
                   <img src="/PorinityLogoTrans.png" alt="Porinity" className="h-16 w-auto object-contain" />
                 </Link>
-                  <m.button
+                  <Motion.button
                   aria-label="Close menu"
                   className="p-2 rounded-md text-[var(--color-primary)] hover:bg-[var(--color-bg-light)]"
                   onClick={() => setIsOpen(false)}
                   whileTap={{ scale: 0.95 }}
                 >
                   <FiX className="w-6 h-6" />
-                  </m.button>
+                  </Motion.button>
               </div>
 
               <div className="px-4 py-4 flex flex-col gap-2">
@@ -250,12 +250,12 @@ export default function Navbar() {
                   </>
                 )}
                   {navLinks.map((link, index) => (
-                    <m.div key={link.to} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * (index + 1), duration: 0.25 }}>
+                    <Motion.div key={link.to} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * (index + 1), duration: 0.25 }}>
                     <NavLink to={link.to} className={navItemClass}>
                       <link.icon className="w-5 h-5" />
                       <span>{link.label}</span>
                     </NavLink>
-                    </m.div>
+                    </Motion.div>
                 ))}
                 {user && (
                   <NavLink to="/dashboard" className={navItemClass}>
@@ -280,8 +280,8 @@ export default function Navbar() {
                   )}
                 </div>
                 </div>
-              </m.aside>
-            </m.div>
+              </Motion.aside>
+            </Motion.div>
         )}
       </AnimatePresence>
     </header>

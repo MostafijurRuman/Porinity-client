@@ -27,6 +27,7 @@ import AdminPremiumApprovals from "../Pages/Dashboard/Admin/AdminPremiumApproval
 import AdminPremiumUserApprovals from "../Pages/Dashboard/Admin/AdminPremiumUserApprovals";
 import AdminContactApprovals from "../Pages/Dashboard/Admin/AdminContactApprovals";
 import AdminSuccessStories from "../Pages/Dashboard/Admin/AdminSuccessStories";
+import AdminContactMessages from "../Pages/Dashboard/Admin/AdminContactMessages";
 import EditProfile from "../Pages/EditProfile/EditProfile";
 
 
@@ -119,6 +120,10 @@ const router = createBrowserRouter([
                     {
                         path: "approvedContactRequest",
                         element: <AdminContactApprovals />,
+                    },
+                    {
+                        path: "contact-messages",
+                        element: <AdminContactMessages />,
                     },
                     {
                         path: "success-stories",

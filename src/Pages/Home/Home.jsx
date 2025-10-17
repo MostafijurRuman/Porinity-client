@@ -9,13 +9,12 @@ import SuccessStories from '../../Components/SuccessStories/SuccessStories'
 export default function Home() {
   return (
     <main className="flex flex-col">
-    <HeroSlider />
-  <SixPremiumBiodat />
-  <PremiumMembershipCTA />
-    <HowItWorks />
-    <SuccessCounters />
-    <SuccessStories />
-
+      <HeroSlider />
+      <SixPremiumBiodat />
+      <PremiumMembershipCTA />
+      <HowItWorks />
+      <SuccessCounters />
+      <SuccessStories />
     </main>
   )
 }

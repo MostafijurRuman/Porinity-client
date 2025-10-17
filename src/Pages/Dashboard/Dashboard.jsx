@@ -14,6 +14,7 @@ import {
   FiPhoneCall,
   FiBookOpen,
   FiAward,
+  FiMail,
 } from 'react-icons/fi';
 import useAuth from '../../Hooks/UseAuth';
 import useUserAccount from '../../Hooks/useUserAccount';
@@ -32,7 +33,8 @@ const adminNavItems = [
   { to: 'premium-biodata-approvals', icon: <FiStar />, label: 'Approve Premium Biodata', badgeKey: 'pendingPremium' },
   { to: 'premium-user-approvals', icon: <FiAward />, label: 'Approve Premium Users', badgeKey: 'pendingPremiumUsers' },
   { to: 'approvedContactRequest', icon: <FiPhoneCall />, label: 'Approved Contact Request', badgeKey: 'pendingContactRequests' },
-  { to: 'success-stories', icon: <FiBookOpen />, label: 'Success Stories' },
+  { to: 'contact-messages', icon: <FiMail />, label: 'Contact Messages', badgeKey: 'pendingContactMessages' },
+  { to: 'success-stories', icon: <FiBookOpen />, label: 'Success Stories', badgeKey: 'pendingSuccessStories' },
 ];
 
 const focusSectionMap = {
