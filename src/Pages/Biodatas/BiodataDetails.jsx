@@ -15,6 +15,8 @@ import {
 import { toast } from 'react-toastify';
 import axiosNormal from '../../Hooks/axiosNormal';
 import useAuth from '../../Hooks/UseAuth';
+import useAxiosSecure from '../../Hooks/useAxiosSecure';
+import useUserAccount from '../../Hooks/useUserAccount';
 import BiodataCard from '../../Components/Biodata/BiodataCard';
 import useFavorites from '../../Hooks/useFavorites';
 
@@ -55,13 +57,21 @@ export default function BiodataDetails() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const axiosSecure = useAxiosSecure();
+  const { account } = useUserAccount();
 
-  const isPremiumMember = Boolean(
-    user?.premiumMember ||
-    user?.isPremium ||
-    user?.role === 'premium' ||
-    user?.subscription === 'premium'
-  );
+  const isPremiumMember = useMemo(() => {
+    const accountType = account?.userType ? String(account.userType).toLowerCase() : '';
+    if (accountType === 'premium') return true;
+
+    const heuristics = [
+      user?.premiumMember,
+      user?.isPremium,
+      (user?.role && String(user.role).toLowerCase() === 'premium'),
+      user?.subscription === 'premium',
+    ];
+    return heuristics.some(Boolean);
+  }, [account?.userType, user?.isPremium, user?.premiumMember, user?.role, user?.subscription]);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['biodata', id],
@@ -73,6 +83,18 @@ export default function BiodataDetails() {
   });
 
   const biodata = data && Object.keys(data).length ? data : placeholderDetails(id);
+
+  const contactRequestsQuery = useQuery({
+    queryKey: ['contact-requests', user?.uid],
+    enabled: Boolean(user?.uid),
+    queryFn: async () => {
+      const { data: requests } = await axiosSecure.get('/contact-requests', {
+        params: { requesterUid: user?.uid },
+      });
+      return Array.isArray(requests) ? requests : [];
+    },
+    staleTime: 60 * 1000,
+  });
 
   const { data: similarList = [] } = useQuery({
     queryKey: ['biodataAllForSimilar'],
@@ -108,7 +130,16 @@ export default function BiodataDetails() {
     return favourites.some((fav) => fav?.biodataId === biodata.biodataId);
   }, [favourites, biodata?.biodataId]);
 
-  const contactVisible = Boolean(isPremiumMember);
+  const hasApprovedContact = useMemo(() => {
+    if (!Array.isArray(contactRequestsQuery.data) || !biodata?.biodataId) return false;
+    return contactRequestsQuery.data.some(
+      (request) =>
+        String(request?.biodataId) === String(biodata.biodataId) &&
+        String(request?.status).toLowerCase() === 'approved'
+    );
+  }, [contactRequestsQuery.data, biodata?.biodataId]);
+
+  const contactVisible = Boolean(isPremiumMember || hasApprovedContact);
 
   const handleAddFavourite = async () => {
     if (!biodata?.biodataId) return;

@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { FiAlertTriangle, FiArrowRight, FiHash } from 'react-icons/fi';
-import { TfiCrown } from "react-icons/tfi";
-import { toast } from 'react-toastify';
+import { FiArrowRight, FiHash, FiInfo } from 'react-icons/fi';
+import { TfiCrown } from 'react-icons/tfi';
 import useMyBiodata from '../../Hooks/useMyBiodata';
-import useAxiosSecure from '../../Hooks/useAxiosSecure';
+
+const PREMIUM_BIODATA_PRICE = 10;
 
 const formatDate = (value) => {
   if (!value) return 'Not provided';
@@ -21,68 +20,109 @@ const formatDate = (value) => {
 };
 
 const PremiumBadge = ({ status }) => {
+  const normalized = (status || 'none').toLowerCase();
   const baseClasses = 'inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide';
-  switch (status) {
-    case 'approved':
-      return (
-        <span className={`${baseClasses} bg-emerald-100 text-emerald-700`}>
-          <TfiCrown /> Premium Approved
-        </span>
-      );
-    case 'pending':
-      return (
-        <span className={`${baseClasses} bg-amber-100 text-amber-700`}>
-          <TfiCrown /> Pending Premium Approval
-        </span>
-      );
-    case 'rejected':
-      return (
-        <span className={`${baseClasses} bg-red-100 text-red-600`}>
-          <TfiCrown /> Premium Rejected
-        </span>
-      );
-    default:
-      return (
-        <span className={`${baseClasses} bg-[var(--color-bg-light)] text-[var(--color-primary)]`}>
-          <TfiCrown /> Standard Biodata
-        </span>
-      );
+
+  if (normalized === 'approved') {
+    return (
+      <span className={`${baseClasses} bg-emerald-100 text-emerald-700`}>
+        <TfiCrown /> Premium Biodata
+      </span>
+    );
   }
+
+  if (normalized === 'pending') {
+    return (
+      <span className={`${baseClasses} bg-amber-100 text-amber-700`}>
+        <TfiCrown /> Pending Review
+      </span>
+    );
+  }
+
+  if (normalized === 'rejected') {
+    return (
+      <span className={`${baseClasses} bg-red-100 text-red-600`}>
+        <TfiCrown /> Premium Rejected
+      </span>
+    );
+  }
+
+  return (
+    <span className={`${baseClasses} bg-[var(--color-bg-light)] text-[var(--color-primary)]`}>
+      <TfiCrown /> Standard Biodata
+    </span>
+  );
 };
 
 export default function ViewBiodata() {
   const navigate = useNavigate();
-  const axiosSecure = useAxiosSecure();
-  const [showModal, setShowModal] = useState(false);
 
   const {
     data: biodata,
     isLoading,
     isError,
     error,
-    refetch,
   } = useMyBiodata({ retry: false });
 
-  const premiumStatus = useMemo(() => biodata?.premiumStatus || 'none', [biodata?.premiumStatus]);
+  const premiumStatus = useMemo(
+    () => (biodata?.premiumStatus ? String(biodata.premiumStatus).toLowerCase() : 'none'),
+    [biodata?.premiumStatus]
+  );
 
-  const premiumMutation = useMutation({
-    mutationFn: async () => {
-      if (!biodata?.biodataId) {
-        throw new Error('Biodata ID missing');
+  const premiumPayment = useMemo(() => biodata?.premiumPayment || null, [biodata?.premiumPayment]);
+
+  const isPremiumButtonDisabled = premiumStatus === 'approved' || premiumStatus === 'pending';
+
+  const premiumButtonLabel = useMemo(() => {
+    switch (premiumStatus) {
+      case 'approved':
+        return 'Premium Badge Active';
+      case 'pending':
+        return 'Premium Request Pending';
+      case 'rejected':
+        return 'Resubmit Premium Request';
+      default:
+        return 'Upgrade Biodata to Premium';
+    }
+  }, [premiumStatus]);
+
+  const premiumHelper = useMemo(() => {
+    switch (premiumStatus) {
+      case 'approved':
+        return {
+          tone: 'success',
+          title: 'Premium biodata is live',
+          message: 'Your biodata is featured across the platform with increased visibility.',
+        };
+      case 'pending': {
+        const amount = premiumPayment?.amount ?? PREMIUM_BIODATA_PRICE;
+        const cardTail = premiumPayment?.cardLast4 ? ` Payment card ending in ••••${premiumPayment.cardLast4}.` : '';
+        return {
+          tone: 'warning',
+          title: 'Awaiting admin review',
+          message: `We received your $${Number(amount).toFixed(2)} premium biodata request. Our team will approve it shortly.${cardTail}`,
+        };
       }
-      const { data } = await axiosSecure.post(`/biodata/${biodata.biodataId}/premium-request`);
-      return data;
-    },
-    onSuccess: (response) => {
-      toast.success(response?.message || 'Premium request submitted for review');
-      setShowModal(false);
-      refetch();
-    },
-    onError: (err) => {
-      const message = err?.response?.data?.message || 'Failed to submit premium request';
-      toast.error(message);
-    },
-  });
+      case 'rejected':
+        return {
+          tone: 'danger',
+          title: 'Premium request was rejected',
+          message: 'Update your biodata details and try submitting another premium request.',
+        };
+      default:
+        return {
+          tone: 'info',
+          title: 'Stand out with a premium biodata',
+          message:
+            'Premium biodatas appear on the homepage, gain priority search placement, and attract more contact requests.',
+        };
+    }
+  }, [premiumStatus, premiumPayment?.amount, premiumPayment?.cardLast4]);
+
+  const gotoPremiumCheckout = () => {
+    if (!biodata?.biodataId) return;
+    navigate(`/premium-biodata/${biodata.biodataId}`);
+  };
 
   if (isLoading) {
     return <p>Loading biodata details…</p>;
@@ -129,7 +169,12 @@ export default function ViewBiodata() {
     { label: 'Mobile Number', value: biodata.mobileNumber },
   ];
 
-  const isPremiumButtonDisabled = premiumStatus === 'approved' || premiumStatus === 'pending';
+  const helperToneClasses = {
+    info: 'border-[var(--color-primary)]/20 bg-[var(--color-bg-light)]/70 text-[var(--color-dark-gray)]',
+    warning: 'border-amber-200 bg-amber-50 text-amber-700',
+    success: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    danger: 'border-red-200 bg-red-50 text-red-700',
+  };
 
   return (
     <div className="space-y-6">
@@ -149,17 +194,27 @@ export default function ViewBiodata() {
         <button
           type="button"
           disabled={isPremiumButtonDisabled}
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-primary-accent)]/60 px-5 py-2 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary-accent)] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+          onClick={gotoPremiumCheckout}
+          className={`inline-flex items-center gap-2 rounded-xl border px-5 py-2 text-sm font-semibold transition ${
+            isPremiumButtonDisabled
+              ? 'border-[var(--color-light-purple)]/60 text-[var(--color-medium-gray)] cursor-not-allowed opacity-70'
+              : 'border-[var(--color-primary-accent)]/60 text-[var(--color-primary)] hover:bg-[var(--color-primary-accent)] hover:text-white'
+          }`}
         >
           <TfiCrown className="text-base" />
-          {premiumStatus === 'approved'
-            ? 'Already Premium'
-            : premiumStatus === 'pending'
-            ? 'Pending Approval'
-            : 'Make Biodata Premium'}
+          {premiumButtonLabel}
         </button>
       </header>
+
+      {premiumHelper && (
+        <div className={`flex gap-3 rounded-2xl border px-5 py-4 text-sm ${helperToneClasses[premiumHelper.tone]}`}>
+          <FiInfo className="mt-0.5 text-base" />
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide">{premiumHelper.title}</p>
+            <p className="mt-1 text-sm leading-relaxed">{premiumHelper.message}</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-5 md:grid-cols-2">
         {detailItems.map((item) => (
@@ -182,37 +237,6 @@ export default function ViewBiodata() {
           <h3 className="text-lg font-semibold text-[var(--color-primary)]">Story</h3>
           <p className="mt-2 text-sm leading-relaxed text-[var(--color-dark-gray)]">{biodata.about}</p>
         </section>
-      )}
-
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
-            <h3 className="text-xl font-semibold text-[var(--color-primary)]">Confirm Premium Request</h3>
-            <p className="mt-2 text-sm text-[var(--color-medium-gray)]">
-              Once submitted, our admin team will review your biodata for premium approval. You will be notified when the status changes.
-            </p>
-            <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-700">
-              <FiAlertTriangle className="mr-2 inline-block" /> Ensure your biodata is complete and accurate before requesting premium verification.
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                className="rounded-lg border border-[var(--color-light-purple)]/60 px-4 py-2 text-sm font-semibold text-[var(--color-dark-gray)] hover:bg-[var(--color-bg-light)]"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => premiumMutation.mutate()}
-                disabled={premiumMutation.isPending}
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-primary-accent)] to-[var(--color-light-pink)] px-5 py-2 text-sm font-semibold text-white shadow disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {premiumMutation.isPending ? 'Submitting…' : 'Yes, Submit'}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

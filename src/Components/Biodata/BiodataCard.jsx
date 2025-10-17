@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiEye, FiHeart, FiShare2 } from 'react-icons/fi';
+import { TfiCrown } from 'react-icons/tfi';
 import { toast } from 'react-toastify';
 import useFavorites from '../../Hooks/useFavorites';
 import useAuth from '../../Hooks/UseAuth';
@@ -16,6 +17,8 @@ export default function BiodataCard({ biodata }) {
     occupation,
     views,
   } = biodata;
+
+  const isPremium = biodata?.premiumStatus === 'approved';
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -117,7 +120,14 @@ export default function BiodataCard({ biodata }) {
         <header className="flex items-start justify-between">
           <div>
             <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-primary-accent)]">Biodata ID: {biodataId}</span>
-            <h3 className="mt-1 text-lg font-semibold text-[var(--color-primary)] dark:text-white">{typeLabel} Biodata</h3>
+            <div className="mt-1 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-[var(--color-primary)] dark:text-white">{typeLabel} Biodata</h3>
+              {isPremium && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-primary-accent)] to-[var(--color-light-pink)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white shadow">
+                  <TfiCrown className="text-[10px]" /> Premium
+                </span>
+              )}
+            </div>
           </div>
           <button
             type="button"
@@ -137,6 +147,11 @@ export default function BiodataCard({ biodata }) {
 
         <div className="flex items-center gap-4">
           <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl border border-[var(--color-primary)]/30 bg-gradient-to-br from-[var(--color-bg-light)] via-white to-[var(--color-light-pink)]/30">
+            {isPremium && (
+              <span className="absolute -top-2 -right-2 inline-flex h-6 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-primary-accent)] to-[var(--color-light-pink)] px-2 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+                <TfiCrown className="text-xs" />
+              </span>
+            )}
             {profileImage ? (
               <img src={profileImage} alt={`Profile ${biodataId}`} className="h-full w-full object-cover" loading="lazy" />
             ) : (

@@ -1,7 +1,6 @@
 import {
     createBrowserRouter,
     RouterProvider,
-    Navigate,
 } from "react-router-dom";
 import ErrorPage from "../Pages/Error/ErrorPage";
 import HomeLayout from "../Layouts/HomeLayout";
@@ -16,10 +15,18 @@ import Register from "../Pages/Register/Register";
 import Dashboard from "../Pages/Dashboard/Dashboard";
 import PrivateRoutes from "./PrivateRoutes";
 import Checkout from "../Pages/Checkout/Checkout";
+import PremiumBiodataCheckout from "../Pages/Checkout/PremiumBiodataCheckout";
+import PremiumUserCheckout from "../Pages/Checkout/PremiumUserCheckout";
 import EditBiodata from "../Pages/Dashboard/EditBiodata";
 import ViewBiodata from "../Pages/Dashboard/ViewBiodata";
 import MyContactRequests from "../Pages/Dashboard/MyContactRequests";
 import FavouritesDashboard from "../Pages/Dashboard/FavouritesDashboard";
+import DashboardLanding from "../Pages/Dashboard/DashboardLanding";
+import AdminManageUsers from "../Pages/Dashboard/Admin/AdminManageUsers";
+import AdminPremiumApprovals from "../Pages/Dashboard/Admin/AdminPremiumApprovals";
+import AdminPremiumUserApprovals from "../Pages/Dashboard/Admin/AdminPremiumUserApprovals";
+import AdminContactApprovals from "../Pages/Dashboard/Admin/AdminContactApprovals";
+import AdminSuccessStories from "../Pages/Dashboard/Admin/AdminSuccessStories";
 import EditProfile from "../Pages/EditProfile/EditProfile";
 
 
@@ -44,6 +51,14 @@ const router = createBrowserRouter([
             {
                 path: "checkout/:id",
                 element: <PrivateRoutes><Checkout/></PrivateRoutes>,
+            },
+            {
+                path: "premium-biodata/:id",
+                element: <PrivateRoutes><PremiumBiodataCheckout/></PrivateRoutes>,
+            },
+            {
+                path: "premium-user",
+                element: <PrivateRoutes><PremiumUserCheckout/></PrivateRoutes>,
             },
             {
                 path: "about-us",
@@ -71,7 +86,7 @@ const router = createBrowserRouter([
                 children: [
                     {
                         index: true,
-                        element: <Navigate to="edit-biodata" replace />,
+                        element: <DashboardLanding />,
                     },
                     {
                         path: "edit-biodata",
@@ -88,6 +103,26 @@ const router = createBrowserRouter([
                     {
                         path: "favourites",
                         element: <FavouritesDashboard />,
+                    },
+                    {
+                        path: "manage",
+                        element: <AdminManageUsers />,
+                    },
+                    {
+                        path: "premium-biodata-approvals",
+                        element: <AdminPremiumApprovals />,
+                    },
+                    {
+                        path: "premium-user-approvals",
+                        element: <AdminPremiumUserApprovals />,
+                    },
+                    {
+                        path: "approvedContactRequest",
+                        element: <AdminContactApprovals />,
+                    },
+                    {
+                        path: "success-stories",
+                        element: <AdminSuccessStories />,
                     },
                 ],
             },

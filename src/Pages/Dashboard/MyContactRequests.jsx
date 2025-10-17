@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { FiTrash2 } from 'react-icons/fi';
+import { FiTrash2, FiEye } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 import useAuth from '../../Hooks/UseAuth';
 import useAxiosSecure from '../../Hooks/useAxiosSecure';
 
@@ -16,6 +17,7 @@ export default function MyContactRequests() {
   const { user } = useAuth() || {};
   const axiosSecure = useAxiosSecure();
   const uid = user?.uid;
+  const navigate = useNavigate();
 
   const {
     data: requests = [],
@@ -106,7 +108,9 @@ export default function MyContactRequests() {
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--color-medium-gray)]">
                 Email
               </th>
-              <th className="px-4 py-3" />
+              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[var(--color-medium-gray)]">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-light-purple)]/20">
@@ -138,14 +142,24 @@ export default function MyContactRequests() {
                   {row.status === 'approved' ? row.contactEmail || 'Not provided' : '--'}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(row.id)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1 text-xs font-semibold text-red-500 hover:bg-red-50"
-                    disabled={deleteMutation.isPending}
-                  >
-                    <FiTrash2 /> Delete
-                  </button>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/biodatas/${row.biodataId}`)}
+                      disabled={row.status !== 'approved'}
+                      className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-primary)] px-3 py-1 text-xs font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <FiEye /> View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(row.id)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1 text-xs font-semibold text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={deleteMutation.isPending}
+                    >
+                      <FiTrash2 /> Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

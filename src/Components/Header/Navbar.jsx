@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion as m } from 'framer-motion'
 import { FiMenu, FiX, FiUser, FiLogOut, FiHome, FiGrid, FiEdit3, FiUsers, FiInfo, FiPhone } from 'react-icons/fi'
+import { TfiCrown } from 'react-icons/tfi'
 import useAuth from '../../Hooks/UseAuth'
+import useUserAccount from '../../Hooks/useUserAccount'
 
 // Contract
 // - Shows logo + name, Home, Biodatas, About Us, Contact Us, Login
@@ -13,6 +15,7 @@ import useAuth from '../../Hooks/UseAuth'
 
 export default function Navbar() {
   const { user, logout } = useAuth() || {}
+  const { account } = useUserAccount(user?.uid)
   const [isOpen, setIsOpen] = useState(false)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -58,6 +61,7 @@ export default function Navbar() {
   ]
 
   const Name = user?.displayName?.split(' ').pop() || user?.displayName
+  const isPremiumUser = account?.userType === 'premium' || account?.premiumUserStatus === 'approved'
 
   const handleLogout = async () => {
     try {
@@ -106,14 +110,22 @@ export default function Navbar() {
                   onClick={() => setIsProfileDropdownOpen((v) => !v)}
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-[var(--color-bg-light)] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)] focus:ring-offset-2"
                 >
-                    <m.div whileHover={{ scale: 1.05 }} className="w-8 h-8 rounded-full overflow-hidden bg-[var(--color-bg-light)] flex items-center justify-center">
+                  <m.div
+                    whileHover={{ scale: 1.05 }}
+                    className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[var(--color-bg-light)]"
+                  >
                     {user.photoURL ? (
-                      <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" />
+                      <img src={user.photoURL} alt={user.displayName || 'User'} className="h-full w-full object-cover" />
                     ) : (
-                      <FiUser className="w-5 h-5 text-[var(--color-primary)]" />
+                      <FiUser className="h-5 w-5 text-[var(--color-primary)]" />
                     )}
-                    </m.div>
-                  <span className="text-sm font-medium text-[var(--color-dark-gray)] max-w-24 truncate">{Name || 'User'}</span>
+                  </m.div>
+                  <span className="text-sm font-medium text-[var(--color-dark-gray)] max-w-32 truncate flex items-center gap-1">
+                    <span className="truncate">{Name || 'User'}</span>
+                    {isPremiumUser && (
+                      <TfiCrown className="text-[var(--color-primary)] text-xs" />
+                    )}
+                  </span>
                   </m.button>
                 <AnimatePresence>
                   {isProfileDropdownOpen && (
@@ -124,6 +136,11 @@ export default function Navbar() {
                       transition={{ duration: 0.2 }}
                       className="absolute right-0 top-full mt-2 w-48 bg-white/95 backdrop-blur-lg rounded-lg shadow-lg border border-[var(--color-bg-light)] py-1 z-50"
                     >
+                      {isPremiumUser && (
+                        <div className="flex items-center gap-2 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-[var(--color-primary-accent)]">
+                          <TfiCrown className="text-sm" /> Premium
+                        </div>
+                      )}
                       <Link to="/dashboard" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-[var(--color-dark-gray)] hover:bg-[var(--color-bg-light)] hover:text-[var(--color-primary)] transition-colors duration-200">
                         <FiGrid className="w-4 h-4" />
                         <span>Dashboard</span>
@@ -214,15 +231,18 @@ export default function Navbar() {
                 {user && (
                   <>
                       <div className="flex items-center gap-3 p-3 rounded-lg bg-white/90 backdrop-blur border border-[var(--color-bg-light)]">
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--color-bg-light)] flex items-center justify-center">
+                      <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[var(--color-bg-light)]">
                         {user.photoURL ? (
-                          <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" />
+                          <img src={user.photoURL} alt={user.displayName || 'User'} className="h-full w-full object-cover" />
                         ) : (
-                          <FiUser className="w-5 h-5 text-[var(--color-primary)]" />
+                          <FiUser className="h-5 w-5 text-[var(--color-primary)]" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-[var(--color-dark-gray)] truncate">{user.displayName || 'User'}</p>
+                        <p className="text-sm font-semibold text-[var(--color-dark-gray)] truncate flex items-center gap-1">
+                          <span className="truncate">{user.displayName || 'User'}</span>
+                          {isPremiumUser && <TfiCrown className="text-[var(--color-primary)] text-xs" />}
+                        </p>
                         <p className="text-xs text-[var(--color-medium-gray)] truncate">{user.email}</p>
                       </div>
                     </div>

@@ -2,20 +2,25 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowRight } from 'react-icons/fi';
+import { TfiCrown } from 'react-icons/tfi';
 import axiosNormal from '../../Hooks/axiosNormal';
 
 export default function SixPremiumBiodat() {
-  const { data: biodata = [], isLoading, isError, error } = useQuery({
-    queryKey: ['biodataTopSix'],
+  const { data: premiumProfiles = [], isLoading, isError, error } = useQuery({
+    queryKey: ['premium-biodata-top'],
     queryFn: async () => {
-      const res = await axiosNormal.get('/biodata'); //Todo: Update api link form premium biodta api
-      return res.data;
-    }
+      const res = await axiosNormal.get('/biodata/premium', { params: { limit: 6 } });
+      const payload = res?.data;
+      if (Array.isArray(payload)) return payload;
+      if (Array.isArray(payload?.data)) return payload.data;
+      return [];
+    },
+    staleTime: 60 * 1000,
   });
   const [sortOrder, setSortOrder] = useState('asc'); // 'asc' | 'desc'
 
   const premiumBiodata = useMemo(() => {
-    const list = Array.isArray(biodata) ? [...biodata] : [];
+    const list = Array.isArray(premiumProfiles) ? [...premiumProfiles] : [];
     list.sort((a, b) => {
       const ageA = parseInt(a?.age, 10);
       const ageB = parseInt(b?.age, 10);
@@ -24,7 +29,7 @@ export default function SixPremiumBiodat() {
       return sortOrder === 'asc' ? validA - validB : validB - validA;
     });
     return list.slice(0, 6);
-  }, [biodata, sortOrder]);
+  }, [premiumProfiles, sortOrder]);
 
 return (
     <section className="w-full py-10 lg:py-14">
@@ -116,6 +121,7 @@ function BiodataCard({ profile }) {
   } = profile;
 
   const shortType = biodataType ? biodataType.toUpperCase().slice(0, 3) : 'ID';
+  const isPremium = profile?.premiumStatus === 'approved';
 
   return (
     <div
@@ -137,6 +143,11 @@ function BiodataCard({ profile }) {
               flex items-center justify-center
             "
           >
+            {isPremium && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-primary-accent)] to-[var(--color-light-pink)] text-white shadow">
+                <TfiCrown className="text-[10px]" />
+              </span>
+            )}
             {profileImage ? (
               <img
                 src={profileImage}
@@ -152,9 +163,16 @@ function BiodataCard({ profile }) {
 
         {/* Info */}
         <div className="flex flex-1 flex-col justify-center min-w-0">
-          <h3 className="text-sm sm:text-base font-bold tracking-wide text-gray-900 dark:text-white">
-            ID-{biodataId}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm sm:text-base font-bold tracking-wide text-gray-900 dark:text-white">
+              ID-{biodataId}
+            </h3>
+            {isPremium && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-primary-accent)] to-[var(--color-light-pink)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                <TfiCrown className="text-[10px]" /> Premium
+              </span>
+            )}
+          </div>
 
           {/* Info lines */}
           <ul className="mt-1 space-y-0.5 text-[13px] leading-snug text-gray-700 dark:text-gray-300">
