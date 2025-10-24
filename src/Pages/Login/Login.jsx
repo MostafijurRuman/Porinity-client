@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { FiMail, FiLock, FiLogIn, FiEye, FiEyeOff } from 'react-icons/fi'
@@ -10,9 +10,34 @@ export default function Login() {
   const { loginWithEmailPassword, handelLoginWithGoogle } = useAuth() || {}
   const navigate = useNavigate()
   const location = useLocation()
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm()
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm()
   const [authError, setAuthError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const emailInputRef = useRef();
+  const passwordInputRef = useRef();
+  // Quick login autofill logic (robust: setValue, set input value, dispatch input event)
+  const handleQuickLogin = (type) => {
+    let email = '', password = '';
+    if (type === 'admin') {
+      email = 'admin@porinity.com';
+      password = 'Admin1234';
+    } else if (type === 'user') {
+      email = 'DemoUser@porinity.com';
+      password = 'User1234';
+    }
+    setValue('email', email, { shouldValidate: true, shouldDirty: true });
+    setValue('password', password, { shouldValidate: true, shouldDirty: true });
+    // Directly set input values and dispatch input events for react-hook-form
+    if (emailInputRef.current) {
+      emailInputRef.current.value = email;
+      emailInputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    if (passwordInputRef.current) {
+      passwordInputRef.current.value = password;
+      passwordInputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
+      passwordInputRef.current.focus();
+    }
+  };
 
   const mapFirebaseError = (err) => {
     const code = err?.code || ''
@@ -90,7 +115,31 @@ export default function Login() {
             </div>
           )}
 
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          {/* Quick Login Buttons (simple label, no credentials shown) */}
+          <div className="flex flex-row gap-2 mt-4 mb-2 animate-fade-in">
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('admin')}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold border border-[var(--color-primary-accent)] bg-gradient-to-r from-[var(--color-primary)]/10 to-white hover:from-[var(--color-primary)] hover:to-[var(--color-light-purple)] hover:text-white transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)] shadow-sm"
+              tabIndex={0}
+              aria-label="Quick Admin Login"
+            >
+              <FiLogIn className="w-4 h-4 text-[var(--color-primary-accent)] group-hover:text-white transition" />
+              <span>Demo Admin Login</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('user')}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold border border-[var(--color-primary)] bg-gradient-to-r from-[var(--color-light-pink)]/10 to-white hover:from-[var(--color-light-pink)] hover:to-[var(--color-primary)] hover:text-white transition focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] shadow-sm"
+              tabIndex={0}
+              aria-label="Quick Demo User Login"
+            >
+              <FiLogIn className="w-4 h-4 text-[var(--color-primary)] group-hover:text-white transition" />
+              <span>Demo User Login</span>
+            </button>
+          </div>
+
+          <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)} autoComplete="on">
             <div>
               <label className="block text-sm font-medium text-[var(--color-dark-gray)] mb-1">Email</label>
               <div className="relative">
@@ -99,7 +148,9 @@ export default function Login() {
                   type="email"
                   className="w-full rounded-md border border-[var(--color-bg-light)] bg-white/95 pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)]"
                   placeholder="you@example.com"
+                  autoComplete="username"
                   {...register('email', { required: 'Email is required' })}
+                  ref={emailInputRef}
                 />
               </div>
               {errors.email && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.email.message}</p>}
@@ -113,7 +164,9 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   className="w-full rounded-md border border-[var(--color-bg-light)] bg-white/95 pl-9 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)]"
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'At least 6 characters' } })}
+                  ref={passwordInputRef}
                 />
                 <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-medium-gray)] hover:text-[var(--color-dark-gray)]">
                   {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}

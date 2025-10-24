@@ -46,7 +46,7 @@ export default function Register() {
 
     try {
       const res = await axiosNormal.post('/register', userPayload, { withCredentials: true });
-      console.log('Backend response:', res.data);
+  // console.log('Backend response:', res.data);
     } catch (dbError) {
       const status = dbError?.response?.status;
       if (status === 400 || status === 409) {

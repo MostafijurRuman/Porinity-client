@@ -111,7 +111,7 @@ export default function HowItWorks() {
 
         {/* CTA */}
         <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-5">
-          <a href="/register" className="relative inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold text-white bg-gradient-to-r from-fuchsia-600 via-pink-600 to-indigo-600 shadow hover:shadow-md transition">
+          <a href="/dashboard/edit-biodata" className="relative inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold text-white bg-gradient-to-r from-fuchsia-600 via-pink-600 to-indigo-600 shadow hover:shadow-md transition">
             Get Started Free
           </a>
           <a href="/biodatas" className="inline-flex items-center gap-2 text-sm font-semibold text-fuchsia-700 dark:text-fuchsia-300 hover:underline">

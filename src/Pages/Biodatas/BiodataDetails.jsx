@@ -96,26 +96,28 @@ export default function BiodataDetails() {
     staleTime: 60 * 1000,
   });
 
-  const { data: similarList = [] } = useQuery({
+  const { data: similarListRaw = {} } = useQuery({
     queryKey: ['biodataAllForSimilar'],
     queryFn: async () => {
       const res = await axiosNormal.get('/biodata');
-      return Array.isArray(res.data) ? res.data : [];
+      // Expecting { data: [...], pagination: {...} }
+      return res.data || {};
     },
     staleTime: 60 * 1000,
     enabled: Boolean(biodata?.biodataType),
   });
 
+  // Use real biodata from API response
   const similarBiodata = useMemo(() => {
-    const collection = similarList.length ? similarList : placeholderCollection;
-    return collection
+    const realList = Array.isArray(similarListRaw.data) ? similarListRaw.data : [];
+    return realList
       .filter(
         (item) =>
           item?.biodataId !== biodata?.biodataId &&
           (item?.biodataType || '').toLowerCase() === (biodata?.biodataType || '').toLowerCase()
       )
       .slice(0, 3);
-  }, [similarList, biodata]);
+  }, [similarListRaw, biodata]);
 
   const {
     favourites,

@@ -5,7 +5,7 @@ import useAuth from "./UseAuth";
 
 
 const axiosSecure = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://porinity-server.vercel.app",
   withCredentials: true,
 });
 
@@ -17,7 +17,7 @@ const useAxiosSecure = () => {
   // Central logout handler with useCallback to prevent unnecessary re-renders
   const handleLogout = useCallback(async () => {
     try {
-      await axios.post("http://localhost:5000/logout", {}, { withCredentials: true });
+      await axios.post("https://porinity-server.vercel.app/logout", {}, { withCredentials: true });
       localStorage.removeItem("user"); // optional
       await logout(); // logout in client also
       navigate("/login");
@@ -39,9 +39,9 @@ const useAxiosSecure = () => {
         if (error.response?.status === 403 && !originalRequest._retry) {
           originalRequest._retry = true;
           try {
-            console.log("Attempting to refresh token...");
-            await axios.post("http://localhost:5000/refresh", {}, { withCredentials: true });
-            console.log("Token refreshed successfully");
+            // console.log("Attempting to refresh token...");
+            await axios.post("https://porinity-server.vercel.app/refresh", {}, { withCredentials: true });
+            // console.log("Token refreshed successfully");
             // Retry the original request
             return axiosSecure(originalRequest);
           } catch (refreshError) {
@@ -53,7 +53,7 @@ const useAxiosSecure = () => {
 
         // Handle 401 Unauthorized - immediate logout
         if (error.response?.status === 401) {
-          console.log("Unauthorized access detected - logging out");
+          // console.log("Unauthorized access detected - logging out");
           handleLogout();
         }
 

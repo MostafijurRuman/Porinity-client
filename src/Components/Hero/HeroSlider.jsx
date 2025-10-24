@@ -20,7 +20,7 @@ const SLIDES = [
     heading: 'Where Stories Begin',
     sub: 'Build your profile and let the right people find you.',
     cta: 'Create Your Profile',
-    to: '/register'
+    to: '/dashboard/view-biodata'
   },
   {
     id: 3,
@@ -151,7 +151,7 @@ export default function HeroSlider() {
       </AnimatePresence>
 
       {/* Desktop side arrows */}
-      <div className="absolute inset-0 items-center justify-between px-2 sm:px-4 z-30 pointer-events-none hidden sm:flex">
+      <div className="absolute inset-0 items-center justify-between px-2 sm:px-4 z-[41] pointer-events-none hidden sm:flex">
         <button
           onClick={prev}
           aria-label="Previous slide"
@@ -169,7 +169,7 @@ export default function HeroSlider() {
       </div>
 
       {/* Mobile bottom controls: arrows + dots */}
-      <div className="sm:hidden absolute bottom-3 left-0 right-0 z-30 flex items-center justify-center gap-4 px-4">
+      <div className="sm:hidden absolute bottom-3 left-0 right-0 z-[41] flex items-center justify-center gap-4 px-4">
         <button
           onClick={prev}
           aria-label="Previous slide"
@@ -196,10 +196,10 @@ export default function HeroSlider() {
         </button>
       </div>
 
-      {/* Drag layer */}
-      {/* Drag layer now only covers lower z so buttons remain clickable */}
+      {/* Drag layer: pointer-events-none on sm+ (desktop), pointer-events-auto only on mobile for swipe */}
       <div
-        className="absolute inset-0 cursor-grab active:cursor-grabbing z-10"
+        className="absolute inset-0 z-10 select-none"
+        style={{ pointerEvents: 'none' }}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         aria-hidden="true"

@@ -161,20 +161,21 @@ export default function BiodataCard({ biodata }) {
             )}
           </div>
 
-        <div className="grid flex-1 grid-cols-2 gap-3 text-sm text-[var(--color-dark-gray)] dark:text-gray-200">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--color-medium-gray)]">Division</p>
-            <p className="font-medium">{permanentDivision || 'Not set'}</p>
+          {/* Info grid: prevent overlap by using min-w-0 and text-ellipsis */}
+          <div className="grid flex-1 grid-cols-2 gap-3 text-sm text-[var(--color-dark-gray)] dark:text-gray-200 min-w-0">
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-wide text-[var(--color-medium-gray)]">Division</p>
+              <p className="font-medium truncate" title={permanentDivision || 'Not set'}>{permanentDivision || 'Not set'}</p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-wide text-[var(--color-medium-gray)]">Age</p>
+              <p className="font-medium truncate" title={age ?? '—'}>{age ?? '—'}</p>
+            </div>
+            <div className="col-span-2 min-w-0">
+              <p className="text-xs uppercase tracking-wide text-[var(--color-medium-gray)]">Occupation</p>
+              <p className="font-medium truncate" title={occupation || 'Not provided'}>{occupation || 'Not provided'}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--color-medium-gray)]">Age</p>
-            <p className="font-medium">{age ?? '—'}</p>
-          </div>
-          <div className="col-span-2">
-            <p className="text-xs uppercase tracking-wide text-[var(--color-medium-gray)]">Occupation</p>
-            <p className="font-medium">{occupation || 'Not provided'}</p>
-          </div>
-        </div>
         </div>
       </div>
 

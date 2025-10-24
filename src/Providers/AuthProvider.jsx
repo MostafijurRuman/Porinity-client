@@ -10,7 +10,7 @@ const auth = getAuth(app);
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);         // Store current user info
-  console.log(user)
+  // console.log(user)
   const [loading, setLoading] = useState(false);  // Track in-flight auth operations (login/register/logout)
   const [initializing, setInitializing] = useState(true); // Track initial auth state check only
   const provider = new GoogleAuthProvider();
@@ -25,7 +25,7 @@ const AuthProvider = ({ children }) => {
         const  user = {email: currentUser.email}
         axiosNormal.post('/jwt', user ,{withCredentials:true})
         .then(res =>{
-          console.log('Login Token ',res.data)
+          // console.log('Login Token ',res.data)
         })
         .catch(error => {
           console.error('Error creating JWT:', error);
@@ -36,7 +36,7 @@ const AuthProvider = ({ children }) => {
         axiosNormal.post('/logout', {}, {
           withCredentials: true
         })
-        .then(res => console.log('Logout',res.data))
+  .then(res => {/* console.log('Logout',res.data) */})
         .catch(error => {
           console.error('Error during logout:', error);
         });
