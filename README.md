@@ -94,7 +94,3 @@ Welcome to **Porinity** – a modern, secure, and feature-rich matrimony platfor
 © 2025 Porinity. All rights reserved.
 
 
-Admin login Details:  Email: admin@porinity.com pass: Admin1234
-User Login Details:  Email:DemoUser@porinity.com Password: User1234
-
-livesite link: https://porinity.web.app
