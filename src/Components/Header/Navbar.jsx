@@ -73,8 +73,15 @@ export default function Navbar() {
     }
   }
 
+  const headerClasses = [
+    'sticky top-0 transition-shadow duration-300',
+    'bg-white',
+    (scrolled || isOpen) ? 'shadow-md' : '',
+    isOpen ? 'z-[70]' : 'z-50',
+  ].join(' ')
+
   return (
-    <header className={`sticky top-0 z-50 transition-shadow duration-300 ${scrolled ? 'shadow-md bg-[var(--color-card-light)]/95 backdrop-blur' : 'bg-[var(--color-card-light)]'}`}>
+    <header className={headerClasses}>
       <nav className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
         <div className="flex h-16 items-center justify-between">
           {/* Left: Logo + Name */}
@@ -186,16 +193,16 @@ export default function Navbar() {
 
       {/* Offcanvas with Framer Motion */}
       <AnimatePresence>
-        {isOpen && (
+    {isOpen && (
             <Motion.div
-            className="fixed inset-0 z-40 md:hidden"
+            className="fixed inset-0 z-[80] md:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             {/* Backdrop */}
               <Motion.div
-              className="absolute inset-0 backdrop-blur-md bg-gradient-to-r from-[var(--color-primary)]/40 via-[var(--color-primary)]/20 to-transparent"
+              className="absolute inset-0 bg-white/9 backdrop-blur"
               onClick={() => setIsOpen(false)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -207,7 +214,7 @@ export default function Navbar() {
               <Motion.aside
               role="dialog"
               aria-modal="true"
-              className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-[var(--color-card-light)] shadow-xl"
+              className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white shadow-xl"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
